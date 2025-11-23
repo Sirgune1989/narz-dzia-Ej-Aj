@@ -47,7 +47,7 @@ export const TOOLS_DATA: Tool[] = [
     name: 'Kling AI',
     categories: ['Wideo'],
     tagline: 'Realistyczne wideo z fizyką świata rzeczywistego.',
-    description: 'Największy konkurent Sora dostępny publicznie. Potrafi generować długie sekwencje (do 2 minut w wersji Pro) z niesamowitym zachowaniem fizyki ciał i płynów.',
+    description: 'Największy konkurent Sora. Potrafi generować długie sekwencje (do 2 minut w wersji Pro) z niesamowitym zachowaniem fizyki ciał i płynów.',
     tutorialStep: 'Wybierz text-to-video, opisz ruch kamery i oświetlenie.',
     pricing: 'Freemium',
     rating: 9.5,

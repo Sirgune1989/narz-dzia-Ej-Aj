@@ -60,7 +60,7 @@ const Modal: React.FC<ModalProps> = ({ tool, isOpen, onClose }) => {
                     <h2 className="text-3xl font-display font-bold text-white">{tool.name}</h2>
                     <div className="flex gap-2 mt-1">
                         {tool.categories.map(cat => (
-                            <span key={cat} className="text-indigo-400 text-sm font-medium uppercase tracking-wide px-2 py-0.5 rounded-md bg-indigo-500/10">
+                            <span key={cat} className="text-indigo-400 text-sm font-medium uppercase tracking-wide">
                                 {cat}
                             </span>
                         ))}

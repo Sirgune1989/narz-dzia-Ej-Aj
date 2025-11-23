@@ -5,7 +5,7 @@ export interface Tool {
   name: string;
   tagline: string;
   description: string;
-  categories: Category[]; // Changed from single Category to array for better filtering
+  categories: Category[]; // Changed from single Category to array
   tags: string[];
   pricing: 'Free' | 'Freemium' | 'Paid' | 'Subscription';
   rating: number; // 1-10
