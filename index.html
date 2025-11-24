@@ -1,13 +1,29 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="pl" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus | AI Directory & Matchmaker</title>
+    <title>Nexus AI | Intelligent Directory & Workflow Engine</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind Config -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -20,13 +36,19 @@
                     colors: {
                         slate: {
                             850: '#151e2e',
+                            900: '#0f172a',
                             950: '#020617',
+                        },
+                        accent: {
+                            500: '#6366f1', // Indigo
+                            600: '#4f46e5',
                         }
                     },
                     animation: {
-                        'fade-in': 'fadeIn 0.5s ease-out',
-                        'slide-up': 'slideUp 0.4s ease-out',
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.6s ease-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'shimmer': 'shimmer 2s linear infinite',
                     },
                     keyframes: {
                         fadeIn: {
@@ -36,44 +58,1440 @@
                         slideUp: {
                             '0%': { transform: 'translateY(20px)', opacity: '0' },
                             '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        shimmer: {
+                            '0%': { backgroundPosition: '-1000px 0' },
+                            '100%': { backgroundPosition: '1000px 0' }
                         }
                     }
                 }
             }
         }
     </script>
+
+    <!-- Global Styles -->
     <style>
         body {
             background-color: #020617;
             color: #e2e8f0;
+            overflow-x: hidden;
         }
-        /* Hide scrollbar for Chrome, Safari and Opera */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        /* Hide scrollbar for IE, Edge and Firefox */
-        .no-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
         .glass-panel {
-            background: rgba(30, 41, 59, 0.4);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.3);
+            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Custom Scrollbar for modal content */
+        .custom-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.5); 
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5); 
+            border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.8); 
         }
     </style>
 <script type="importmap">
 {
   "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/"
   }
 }
 </script>
 </head>
 <body>
     <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+        const { Star, Search, Menu, X, Heart, ExternalLink, Zap, Brain, Sparkles, ArrowRight, Layers, Clock, ShieldCheck, ChevronRight } = window.lucide || {};
+
+        // --- DATA LAYER ---
+        
+        const Icon = ({ name, size = 20, className = "" }) => {
+            if (name === 'Star') return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
+            if (name === 'Heart') return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5 4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>;
+            if (name === 'Zap') return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
+            if (name === 'Clock') return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+            if (name === 'Brain') return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></svg>;
+            if (name === 'Sparkles') return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 5h4"/><path d="M3 9h4"/></svg>;
+            if (name === 'ExternalLink') return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
+            if (name === 'X') return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 18 18"/></svg>;
+            if (name === 'Search') return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
+            if (name === 'ArrowRight') return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>;
+            if (name === 'ChevronRight') return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"/></svg>;
+            return <span className="text-xl">✨</span>;
+        };
+
+        const TOOLS_DATA = [
+            // --- VIDEO ---
+            {
+                id: 'vidnoz',
+                name: 'Vidnoz AI',
+                categories: ['Wideo'],
+                tagline: 'Darmowe generowanie wideo z awatarami.',
+                description: 'Konkurent HeyGen oferujący hojny plan darmowy. Pozwala tworzyć wideo z mówiącymi awatarami (Talking Heads) na podstawie tekstu. Posiada setki szablonów do social media.',
+                features: ['300+ Awatarów AI', 'Klonowanie głosu', 'Szablony Social Media', 'Face Swap wideo'],
+                bestFor: ['TikTok/Reels', 'Materiały szkoleniowe', 'Tani marketing'],
+                hiddenGem: 'Darmowy Face Swap Tool działający zadziwiająco dobrze.',
+                pricing: 'Freemium',
+                rating: 8.5,
+                ctaLink: 'https://www.vidnoz.com/',
+                icon: '🎭',
+                tags: ['Avatar', 'Free Plan'],
+                isNew: true
+            },
+            {
+                id: 'heygen',
+                name: 'HeyGen',
+                categories: ['Wideo', 'Biznes'],
+                tagline: 'Lider wideo biznesowego i tłumaczeń.',
+                description: 'Najwyższa jakość lip-sync (synchronizacji ust) na rynku. Idealny dla firm chcących skalować produkcję wideo bez kamer. Funkcja Video Translate automatycznie tłumaczy wideo zachowując głos lektora.',
+                features: ['Instant Avatar (zrobisz go telefonem)', 'Video Translate', 'API access', 'Streaming Avatar'],
+                bestFor: ['Sales outreach', 'Onboarding pracowników', 'Globalny content'],
+                hiddenGem: 'Możliwość stworzenia awatara z samej fotki, który rusza rękami (Photo Avatar 2.0).',
+                pricing: 'Paid',
+                rating: 10,
+                ctaLink: 'https://app.heygen.com/home',
+                icon: '👔',
+                tags: ['Business', 'Translation'],
+            },
+            {
+                id: 'hailuo',
+                name: 'Hailuo AI',
+                categories: ['Wideo'],
+                tagline: 'Model Minimax - obecny król jakości wideo.',
+                description: 'Chiński model (Minimax), który obecnie deklasuje konkurencję w płynności ruchu i spójności postaci. Generuje 6-sekundowe klipy w HD, które wyglądają jak film.',
+                features: ['Text-to-Video', 'Image-to-Video', 'Wysoka spójność (Consistency)', 'Kinowa jakość'],
+                bestFor: ['Stock footage', 'Teledyski', 'Reklamy TV'],
+                hiddenGem: 'Bardzo dobrze radzi sobie z dłońmi i interakcjami postaci z obiektami.',
+                pricing: 'Free (Beta)',
+                rating: 9.5,
+                ctaLink: 'https://hailuoai.video/',
+                icon: '🐉',
+                tags: ['Sora-level', 'High-Res'],
+                isHot: true
+            },
+            {
+                id: 'kling',
+                name: 'Kling AI',
+                categories: ['Wideo'],
+                tagline: 'Realistyczna fizyka i długie klipy.',
+                description: 'Poważny konkurent dla Sora i Runway. Pozwala generować wideo do 2 minut (w wersji Pro). Wyróżnia się niesamowitym odwzorowaniem fizyki (jedzenie, płyny, materiały).',
+                features: ['Długie generacje (do 2 min)', 'Kontrola kamery', 'Negative prompts', 'Modele 1.0 i 1.5'],
+                bestFor: ['Symulacje fizyczne', 'Dłuższe narracje', 'Hyper-realizm'],
+                hiddenGem: 'Świetnie radzi sobie z ujęciami dronowymi FPV.',
+                pricing: 'Freemium',
+                rating: 9,
+                ctaLink: 'https://app.klingai.com/cn/',
+                icon: '🎥',
+                tags: ['Physics', 'Long Form'],
+            },
+            {
+                id: 'runway',
+                name: 'Runway Gen-3',
+                categories: ['Wideo'],
+                tagline: 'Szwajcarski scyzoryk dla filmowców.',
+                description: 'Narzędzie numer 1 w Hollywood. Oferuje nie tylko generowanie, ale pełną edycję: Inpainting, Green Screen, Motion Tracking.',
+                features: ['Motion Brush (kontrola ruchu)', 'Gen-3 Alpha', 'Video Inpainting', 'Green Screen removal'],
+                bestFor: ['Profesjonalna post-produkcja', 'VFX', 'Kontrolowane ujęcia'],
+                hiddenGem: 'Narzędzie "Frame Interpolation" do robienia super slow-motion ze zwykłego wideo.',
+                pricing: 'Paid',
+                rating: 9.5,
+                ctaLink: 'https://runwayml.com',
+                icon: '🎬',
+                tags: ['Pro', 'Cinema'],
+            },
+            {
+                id: 'pixverse',
+                name: 'PixVerse AI',
+                categories: ['Wideo'],
+                tagline: 'Twórz realistyczne wideo i anime.',
+                description: 'Potężny generator wideo specjalizujący się w spójności ruchu. Funkcja Magic Brush pozwala animować wybrane fragmenty zdjęcia.',
+                features: ['Magic Brush', 'Style Anime/Realistic', 'Upscaling do 4K'],
+                bestFor: ['Klipów muzycznych', 'Animacji'],
+                hiddenGem: 'Świetny tryb Anime, który zachowuje spójność twarzy.',
+                pricing: 'Freemium',
+                rating: 8,
+                ctaLink: 'https://pixverse.ai',
+                icon: '🎞️',
+                tags: ['Motion', 'Anime'],
+            },
+            {
+                id: 'higgsfield',
+                name: 'Higgsfield AI',
+                categories: ['Wideo'],
+                tagline: 'Kinowa kontrola kamery w telefonie.',
+                description: 'Mobile-first generator. Model "Diffuse" pozwala zmieniać ubrania lub tło bez naruszania postaci.',
+                features: ['Aplikacja mobilna', 'Remix wideo', 'Face preservation'],
+                bestFor: ['Social Media', 'Fashion'],
+                hiddenGem: 'Możesz nagrać siebie telefonem i zmienić się w postać z bajki zachowując swój ruch.',
+                pricing: 'Subscription',
+                rating: 8.5,
+                ctaLink: 'https://higgsfield.ai',
+                icon: '📱',
+                tags: ['Mobile', 'Remix'],
+            },
+
+            // --- GRAFIKA ---
+            {
+                id: 'midjourney',
+                name: 'Midjourney',
+                categories: ['Grafika'],
+                tagline: 'Artystyczny absolut. Król tekstur i światła.',
+                description: 'Jeśli zależy Ci na "efekcie WOW", Midjourney nie ma konkurencji. V6.1 oferuje fotorealizm nie do odróżnienia od zdjęcia.',
+                features: ['Style Reference (--sref)', 'Character Reference (--cref)', 'Zoom Out / Pan', 'Vary Region'],
+                bestFor: ['Moodboardy', 'High-end marketing', 'Artystyczne koncepcje'],
+                hiddenGem: 'Parametr --weird pozwala tworzyć rzeczy, których nikt wcześniej nie widział.',
+                pricing: 'Paid',
+                rating: 10,
+                ctaLink: 'https://midjourney.com',
+                icon: '🎨',
+                tags: ['Art', 'Reference'],
+            },
+            {
+                id: 'ideogram',
+                name: 'Ideogram 2.0',
+                categories: ['Grafika'],
+                tagline: 'Mistrz typografii i designu.',
+                description: 'Model, który "umie w napisy". Generuje plakaty, logotypy, naklejki i t-shirty z poprawnym tekstem w środku grafiki.',
+                features: ['Bezbłędny text rendering', 'Magic Prompt', 'Style preset (3D, Anime, Design)', 'Edytor palety kolorów'],
+                bestFor: ['Projektowanie logo', 'Print-on-demand', 'Social media graphics'],
+                hiddenGem: 'Tryb "Describe" analizuje Twoje zdjęcie i pisze do niego idealny prompt.',
+                pricing: 'Freemium',
+                rating: 9.5,
+                ctaLink: 'https://ideogram.ai',
+                icon: '🔤',
+                tags: ['Text', 'Logo'],
+                isHot: true
+            },
+            {
+                id: 'leonardo',
+                name: 'Leonardo.ai',
+                categories: ['Grafika'],
+                tagline: 'Dla twórców gier i artystów.',
+                description: 'Pozwala trenować własne modele na swoich grafikach. Niesamowita kontrola nad stylem i spójnością.',
+                features: ['Model Training', 'Realtime Canvas', 'Texture Generation'],
+                bestFor: ['Game Assets', 'Concept Art'],
+                hiddenGem: 'Funkcja Elements pozwala mieszać różne style artystyczne (np. Szkło + Ogień).',
+                pricing: 'Freemium',
+                rating: 9.5,
+                ctaLink: 'https://leonardo.ai',
+                icon: '🦁',
+                tags: ['GameDev', 'Training'],
+            },
+            {
+                id: 'google_fx',
+                name: 'ImageFX / Gemini',
+                categories: ['Grafika', 'Dev'],
+                tagline: 'Ekosystem Google (Imagen 3).',
+                description: 'Najnowszy model Imagen 3 od Google. Oferuje niesamowitą fotorealistyczność i świetne rozumienie długich promptów.',
+                features: ['Imagen 3', 'Deep integration', 'Expressive Chips (szybka edycja)'],
+                bestFor: ['Szybkie prototypowanie', 'Realistyczne zdjęcia'],
+                hiddenGem: 'Używaj "Chips" w ImageFX do szybkiej podmiany słów kluczowych bez pisania od nowa.',
+                pricing: 'Free',
+                rating: 9,
+                ctaLink: 'https://labs.google/fx/tools/image-fx',
+                icon: '💎',
+                tags: ['Google', 'Photorealism'],
+            },
+            {
+                id: 'photoroom',
+                name: 'Photoroom',
+                categories: ['Grafika', 'Biznes'],
+                tagline: 'Magiczne studio produktowe.',
+                description: 'Usuwa tło i generuje profesjonalne scenerie dla produktów. Must-have dla e-commerce.',
+                features: ['Batch Mode (hurtowo)', 'AI Backgrounds', 'Shadow generation'],
+                bestFor: ['E-commerce', 'Vinted/Allegro'],
+                hiddenGem: 'Może dodać cień i odbicie do produktu, żeby wyglądał jak ze studia.',
+                pricing: 'Freemium',
+                rating: 10,
+                ctaLink: 'https://photoroom.com',
+                icon: '🛍️',
+                tags: ['E-commerce', 'Product'],
+            },
+            {
+                id: 'krea',
+                name: 'Krea.ai',
+                categories: ['Grafika'],
+                tagline: 'Upscaling i generowanie w czasie rzeczywistym.',
+                description: 'Rysujesz kółka, a AI zamienia je w zdjęcia. Posiada też najlepszy na rynku upscaler (powiększanie zdjęć).',
+                features: ['Real-time Generation', 'Upscaler & Enhancer', 'AI Patterns'],
+                bestFor: ['Szkicowanie', 'Poprawa jakości starych zdjęć'],
+                hiddenGem: 'Narzędzie "Logo Illusion" ukrywa Twoje logo w krajobrazie.',
+                pricing: 'Freemium',
+                rating: 9,
+                ctaLink: 'https://krea.ai',
+                icon: '✨',
+                tags: ['Real-time', 'Upscale'],
+            },
+            {
+                id: 'craiyon',
+                name: 'Craiyon',
+                categories: ['Grafika'],
+                tagline: 'Darmowy generator (dawne DALL-E Mini).',
+                description: 'Całkowicie darmowe narzędzie. Jakość niższa niż konkurencja, ale świetne do szybkich konceptów bez logowania.',
+                features: ['Całkowicie za darmo', 'Brak limitów', 'Prosty interfejs'],
+                bestFor: ['Memy', 'Szybkie szkice'],
+                hiddenGem: 'Generuje 9 wariantów na raz, co jest świetne do burzy mózgów.',
+                pricing: 'Free',
+                rating: 6.5,
+                ctaLink: 'https://www.craiyon.com',
+                icon: '🖍️',
+                tags: ['Free', 'Basic'],
+            },
+            {
+                id: 'themeforest',
+                name: 'ThemeForest',
+                categories: ['Grafika', 'Dev'],
+                tagline: 'Zasoby cyfrowe i szablony.',
+                description: 'Klasyk, ale zasilany nowymi zasobami AI. Największy rynek szablonów stron, wtyczek, grafik i wideo.',
+                features: ['Szablony WordPress', 'Skrypty PHP', 'Elementy UI', 'Muzyka stockowa'],
+                bestFor: ['Szybkie budowanie stron', 'Zasoby dla freelancerów'],
+                hiddenGem: 'Sekcja z szablonami Admin Dashboard często ma gotowe integracje React.',
+                pricing: 'Paid',
+                rating: 8,
+                ctaLink: 'https://themeforest.net/',
+                icon: '🌲',
+                tags: ['Marketplace', 'Assets'],
+            },
+
+            // --- DEV & TECH ---
+            {
+                id: 'manus',
+                name: 'Manus',
+                categories: ['Dev', 'Agent'],
+                tagline: 'W pełni autonomiczny inżynier AI.',
+                description: 'To nie jest kolejny czat. Manus przejmuje kontrolę nad środowiskiem. Dajesz mu dostęp do repozytorium, a on sam instaluje zależności, pisze kod, testuje i robi commity.',
+                features: ['Autonomiczne rozwiązywanie issues', 'Obsługa terminala', 'Samodzielny debugging', 'Integracja z GitHub'],
+                bestFor: ['Refaktoryzacja legacy code', 'Pisanie testów', 'Nudne zadania inżynieryjne'],
+                hiddenGem: 'Może sam wyszukać dokumentację nowej biblioteki i nauczyć się jej używać w locie.',
+                pricing: 'Paid',
+                rating: 10,
+                ctaLink: 'https://manus.im',
+                icon: '🦾',
+                tags: ['Autonomous', 'Future'],
+                isNew: true
+            },
+            {
+                id: 'cursor',
+                name: 'Cursor',
+                categories: ['Dev'],
+                tagline: 'VS Code na sterydach AI.',
+                description: 'Edytor kodu, który zmienia zasady gry. Funkcja "Tab" (Copilot++) przewiduje Twoje myśli i edytuje wiele linii naraz. Tryb "Composer" pozwala pisać całe aplikacje w języku naturalnym.',
+                features: ['Codebase indexing (zna cały Twój projekt)', 'Composer (multi-file edit)', 'Import z VS Code', 'Własne modele LLM'],
+                bestFor: ['Codzienne programowanie', 'Szybkie prototypowanie', 'Nauka nowych frameworków'],
+                hiddenGem: 'Możesz dodać dokumentację dowolnej biblioteki poprzez wklejenie linku w ustawieniach ("Docs").',
+                pricing: 'Freemium',
+                rating: 10,
+                ctaLink: 'https://cursor.com/',
+                icon: '🖱️',
+                tags: ['IDE', 'Productivity'],
+            },
+            {
+                id: 'bolt',
+                name: 'Bolt.new',
+                categories: ['Dev'],
+                tagline: 'Full-stack w przeglądarce.',
+                description: 'Opisz aplikację, a Bolt ją zbuduje, uruchomi i pozwoli edytować w przeglądarce. Idealne do MVP.',
+                features: ['WebContainers', 'Instant Deploy', 'Preview Live'],
+                bestFor: ['MVP', 'Prototypy', 'Demos'],
+                hiddenGem: 'Możesz pobrać wygenerowany kod jako ZIP i wrzucić do Cursor.',
+                pricing: 'Freemium',
+                rating: 10,
+                ctaLink: 'https://bolt.new',
+                icon: '⚡',
+                tags: ['Web', 'MVP'],
+                isHot: true
+            },
+             {
+                id: 'claude',
+                name: 'Claude 3.5 Sonnet',
+                categories: ['Dev', 'Produktywność'],
+                tagline: 'Najlepszy model do kodowania.',
+                description: 'Model od Anthropic, który obecnie wygrywa w rankingach kodowania. Funkcja "Artifacts" pozwala podglądać wygenerowany kod (HTML/React) obok czatu.',
+                features: ['Artifacts UI', 'Ogromne okno kontekstowe', 'Naturalny język'],
+                bestFor: ['Complex Logic', 'Pisanie dokumentacji', 'Kodowanie'],
+                hiddenGem: 'Wklej mu zdjęcie interfejsu, a on napisze kod w Tailwind CSS.',
+                pricing: 'Freemium',
+                rating: 10,
+                ctaLink: 'https://claude.ai',
+                icon: '🧠',
+                tags: ['LLM', 'Coding'],
+            },
+            {
+                id: 'v0',
+                name: 'v0.dev',
+                categories: ['Dev'],
+                tagline: 'Generuj UI (React/Tailwind) z tekstu.',
+                description: 'Narzędzie od Vercel. Piszesz "Dashboard SaaS dark mode", a on generuje piękny kod używając Shadcn UI i Tailwind.',
+                features: ['Shadcn UI', 'React Code', 'Wersjonowanie'],
+                bestFor: ['Frontend', 'Szybkie UI'],
+                hiddenGem: 'Możesz edytować wybrane fragmenty interfejsu, zaznaczając je i wpisując nowy prompt.',
+                pricing: 'Freemium',
+                rating: 9.5,
+                ctaLink: 'https://v0.dev',
+                icon: '📐',
+                tags: ['UI', 'React'],
+            },
+             {
+                id: 'ai_studio',
+                name: 'AI Studio Google',
+                categories: ['Dev'],
+                tagline: 'Plac zabaw dla Gemini API.',
+                description: 'Testuj prompty, modele Gemini 1.5 Pro/Flash i multimodalność (wideo/audio) przed wdrożeniem.',
+                features: ['Darmowy dostęp do Gemini 1.5 Pro', 'Eksport kodu', 'Multimodal input'],
+                bestFor: ['Developers', 'Prompt Engineering'],
+                hiddenGem: 'Oferuje gigantyczne okno kontekstowe (2M tokenów) za darmo w wersji testowej.',
+                pricing: 'Free',
+                rating: 9.5,
+                ctaLink: 'https://aistudio.google.com',
+                icon: '🛠️',
+                tags: ['API', 'Testing'],
+            },
+             {
+                id: 'deepseek',
+                name: 'DeepSeek',
+                categories: ['Dev'],
+                tagline: 'Najtańsza potęga Open Source.',
+                description: 'Chiński model, który wstrząsnął rynkiem (V3/R1). Oferuje jakość GPT-4 za ułamek ceny. Świetny w matematyce i kodzie.',
+                features: ['DeepSeek Coder', 'Bardzo tanie API', 'Open weights'],
+                bestFor: ['Tanie przetwarzanie danych', 'Kodowanie'],
+                hiddenGem: 'Ich model "Coder" jest często lepszy niż GPT-4 w Pythonie.',
+                pricing: 'Free/Cheap',
+                rating: 9,
+                ctaLink: 'https://chat.deepseek.com',
+                icon: '🐋',
+                tags: ['Open Source', 'Cheap'],
+            },
+            {
+                id: 'framer',
+                name: 'Framer',
+                categories: ['Dev', 'Grafika'],
+                tagline: 'Design to Site (No-Code).',
+                description: 'Projektujesz jak w Figmie, publikujesz jako prawdziwą stronę. Najlepsze narzędzie dla designerów, którzy nie kodują.',
+                features: ['Import z Figmy', 'CMS', 'Efekty 3D'],
+                bestFor: ['Portfolio', 'Landing Pages'],
+                hiddenGem: 'Magic Motion pozwala na animacje między podstronami bez kodu.',
+                pricing: 'Freemium',
+                rating: 9,
+                ctaLink: 'https://framer.com',
+                icon: '🎨',
+                tags: ['No-Code', 'Web'],
+            },
+            {
+                id: 'tiiny',
+                name: 'Tiiny.host',
+                categories: ['Dev'],
+                tagline: 'Hosting plików (Drag & Drop).',
+                description: 'Najprostszy sposób na pokazanie klientowi projektu. Przeciągasz ZIP/HTML i masz link.',
+                features: ['PDF Hosting', 'HTML Hosting', 'Hasła'],
+                bestFor: ['Demo dla klienta', 'Szybkie udostępnianie'],
+                hiddenGem: 'Możesz edytować kod HTML bezpośrednio w przeglądarce po wgraniu.',
+                pricing: 'Freemium',
+                rating: 8,
+                ctaLink: 'https://tiiny.host',
+                icon: '🌐',
+                tags: ['Hosting', 'Simple'],
+            },
+            {
+                id: 'sourcestream',
+                name: 'SourceStream',
+                categories: ['Dev', 'Zasoby'],
+                tagline: 'Platforma dla nowoczesnych twórców.',
+                description: 'Agregat nowoczesnych rozwiązań streamingowych i deweloperskich.',
+                features: ['Narzędzia streamingowe', 'Integracje API', 'Zasoby video'],
+                bestFor: ['Streamerzy', 'DevOps'],
+                hiddenGem: 'Unikalne narzędzia do automatyzacji live.',
+                pricing: 'Varies',
+                rating: 7.5,
+                ctaLink: 'https://sourcestream.net/',
+                icon: '📡',
+                tags: ['Stream', 'Tools'],
+                isNew: true
+            },
+            {
+                id: 'google_cloud',
+                name: 'Google Cloud Console',
+                categories: ['Dev', 'Infra'],
+                tagline: 'Mózg operacyjny dla aplikacji AI.',
+                description: 'Miejsce, gdzie wdrażasz swoje modele Vertex AI, zarządzasz kluczami API i skalujesz aplikacje. Niezbędne dla każdego budującego na rozwiązaniach Google.',
+                features: ['Vertex AI', 'Compute Engine', 'Cloud Run', 'BigQuery'],
+                bestFor: ['Backend developerzy', 'Data Scientists', 'Skalowanie'],
+                hiddenGem: 'Model Garden - miejsce gdzie przetestujesz setki modeli open-source jednym kliknięciem.',
+                pricing: 'Pay-as-you-go',
+                rating: 9,
+                ctaLink: 'https://console.cloud.google.com/',
+                icon: '☁️',
+                tags: ['Infrastructure', 'Scale'],
+            },
+
+            // --- PRODUKTYWNOŚĆ & RESEARCH ---
+            {
+                id: 'notebooklm',
+                name: 'NotebookLM',
+                categories: ['Produktywność', 'Edukacja'],
+                tagline: 'Zamień notatki w podcast i wiedzę.',
+                description: 'Rewolucyjne narzędzie od Google. Wgrywasz PDFy, teksty, linki, a AI staje się ekspertem od Twoich danych. Funkcja "Audio Overview" generuje podcast, w którym dwoje hostów omawia Twój materiał.',
+                features: ['Grounded QA (odpowiedzi tylko ze źródeł)', 'Audio Overview (Podcast)', 'Cytowania', 'Zapisywanie notatek'],
+                bestFor: ['Studenci', 'Researcherzy', 'Analiza raportów'],
+                hiddenGem: 'Możesz wgrać całą książkę w PDF i "rozmawiać" z nią.',
+                pricing: 'Free',
+                rating: 10,
+                ctaLink: 'https://notebooklm.google.com/',
+                icon: '📓',
+                tags: ['Research', 'Podcast'],
+                isHot: true
+            },
+            {
+                id: 'perplexity',
+                name: 'Perplexity AI',
+                categories: ['Produktywność'],
+                tagline: 'Wyszukiwarka z przypisami.',
+                description: 'Zastępuje Google w 90% przypadków. Daje konkretną odpowiedź zamiast listy linków.',
+                features: ['Pro Search', 'Wybór modelu (Claude/GPT)', 'Collections'],
+                bestFor: ['Fact-checking', 'Szybka wiedza'],
+                hiddenGem: 'Tryb "Writing" pozwala generować tekst bez przeszukiwania sieci.',
+                pricing: 'Freemium',
+                rating: 10,
+                ctaLink: 'https://perplexity.ai',
+                icon: '🔍',
+                tags: ['Search', 'Knowledge'],
+            },
+            {
+                id: 'chatgpt',
+                name: 'ChatGPT 4o',
+                categories: ['Produktywność'],
+                tagline: 'Wszechstronny asystent.',
+                description: 'Klasyk. Model 4o jest multimodalny - widzi, słyszy i mówi w czasie rzeczywistym.',
+                features: ['Canvas (do pisania)', 'Voice Mode', 'Data Analysis'],
+                bestFor: ['Wszystko', 'Pisanie', 'Analiza danych'],
+                hiddenGem: 'Możesz go poprosić o stworzenie interaktywnego wykresu z wgranych danych Excel.',
+                pricing: 'Freemium',
+                rating: 10,
+                ctaLink: 'https://chatgpt.com',
+                icon: '🤖',
+                tags: ['General', 'Assistant'],
+            },
+             {
+                id: 'gamma',
+                name: 'Gamma',
+                categories: ['Produktywność', 'Biznes'],
+                tagline: 'Piękne prezentacje szybciej niż zrobisz kawę.',
+                description: 'Koniec z PowerPointem. Piszesz temat, a Gamma tworzy całą prezentację, dobiera układ, zdjęcia i ikony. Możesz edytować całość jak dokument tekstowy.',
+                features: ['Import z Google Docs/Word', 'AI Image generation', 'Interaktywne elementy', 'Export do PDF/PPT'],
+                bestFor: ['Pitch decki', 'Raporty', 'Szkolenia'],
+                hiddenGem: 'Tryb "Webpage" pozwala stworzyć prostą stronę lądowania (landing page) w tym samym procesie.',
+                pricing: 'Freemium',
+                rating: 9.5,
+                ctaLink: 'https://gamma.app/',
+                icon: '📊',
+                tags: ['Slides', 'Design'],
+            },
+            {
+                id: 'genspark',
+                name: 'GenSpark',
+                categories: ['Produktywność', 'Search'],
+                tagline: 'Nowa generacja wyszukiwania (Sparkpages).',
+                description: 'Wyszukiwarka, która zamiast listy linków tworzy dla Ciebie spersonalizowaną stronę (Sparkpage) z podsumowaniem tematu, wideo i obrazami.',
+                features: ['Generowanie Sparkpages', 'Agregacja wielu źródeł', 'Autonomiczny agent travel/shopping', 'Brak reklam'],
+                bestFor: ['Planowanie podróży', 'Zakupy (porównania)', 'Szybka nauka'],
+                hiddenGem: 'Świetne do porównywania produktów - tworzy tabelę porównawczą "on-the-fly".',
+                pricing: 'Free',
+                rating: 9,
+                ctaLink: 'https://www.genspark.ai/',
+                icon: '🎇',
+                tags: ['Search', 'Agent'],
+            },
+            {
+                id: 'artificial_analysis',
+                name: 'Artificial Analysis',
+                categories: ['Produktywność', 'Dev'],
+                tagline: 'Niezależne benchmarki modeli AI.',
+                description: 'Jeśli zastanawiasz się, który model jest najtańszy, najszybszy lub najmądrzejszy - to jest źródło prawdy. Wykresy wydajności/ceny aktualizowane na żywo.',
+                features: ['Ranking ELO modeli', 'Ceny za 1M tokenów', 'Testy szybkości (Latency)', 'Jakość generowania obrazu'],
+                bestFor: ['CTO', 'Deweloperzy', 'Wybór API'],
+                hiddenGem: 'Kalkulator kosztów API pozwalający oszacować budżet projektu.',
+                pricing: 'Free',
+                rating: 9.5,
+                ctaLink: 'https://artificialanalysis.ai/',
+                icon: '📈',
+                tags: ['Data', 'Benchmarks'],
+                isNew: true
+            },
+            {
+                id: 'wispr',
+                name: 'Wispr Flow',
+                categories: ['Produktywność'],
+                tagline: 'Dyktowanie nowej generacji.',
+                description: 'Mówisz chaotycznie, a on pisze piękny e-mail. Działa w każdej aplikacji na Macu.',
+                features: ['Auto-formatowanie', 'Wsparcie wielu języków', 'Szybkość'],
+                bestFor: ['E-maile', 'Szybkie notatki'],
+                hiddenGem: 'Rozumie polecenia w trakcie dyktowania (np. "w nowej linii").',
+                pricing: 'Freemium',
+                rating: 8.5,
+                ctaLink: 'https://flow.wispr.ai',
+                icon: '🎙️',
+                tags: ['Dictation', 'Mac'],
+            },
+            {
+                id: 'opal',
+                name: 'Opal',
+                categories: ['Produktywność', 'Sprzęt'],
+                tagline: 'Pierwsza profesjonalna kamera internetowa z AI.',
+                description: 'Hardware i software, który sprawia, że na wideorozmowach wyglądasz jak w kinie. Aplikacja Opal Composer używa AI do poprawy oświetlenia i bokeh (rozmycia tła) w czasie rzeczywistym.',
+                features: ['DSLR Quality', 'Inteligentne wyciszanie szumów', 'Auto-framing', 'Color grading'],
+                bestFor: ['Praca zdalna', 'Twórcy contentu', 'Spotkania zarządu'],
+                hiddenGem: 'Funkcja "Focus" w aplikacji pomaga blokować rozpraszacze podczas pracy.',
+                pricing: 'Paid (Hardware)',
+                rating: 9,
+                ctaLink: 'https://opal.google/',
+                icon: '📷',
+                tags: ['Hardware', 'Quality'],
+            },
+             {
+                id: 'prompt_cowboy',
+                name: 'Prompt Cowboy',
+                categories: ['Produktywność'],
+                tagline: 'Narzędzia dla inżynierów promptów.',
+                description: 'Zestaw narzędzi pomagających tworzyć lepsze prompty do LLM.',
+                features: ['Optymalizacja', 'Testowanie', 'Organizacja'],
+                bestFor: ['Prompt Engineering', 'Nauka'],
+                hiddenGem: 'Świetna baza wiedzy o technikach promptowania.',
+                pricing: 'Freemium',
+                rating: 8,
+                ctaLink: 'https://promptcowboy.com',
+                icon: '🤠',
+                tags: ['Tools', 'Learning'],
+            },
+
+            // --- AUDIO ---
+            {
+                id: 'elevenlabs',
+                name: 'ElevenLabs',
+                categories: ['Audio'],
+                tagline: 'Najlepsze głosy AI.',
+                description: 'Polski unicorn. Generuje głosy nie do odróżnienia od ludzkich. Posiada też funkcję dubbingu i efektów dźwiękowych.',
+                features: ['Voice Cloning', 'Dubbing Studio', 'SFX Generation'],
+                bestFor: ['Lektorzy', 'Audiobooki', 'Wideo'],
+                hiddenGem: 'Generator efektów dźwiękowych - wpisz "kroki na śniegu" i masz dźwięk.',
+                pricing: 'Freemium',
+                rating: 10,
+                ctaLink: 'https://elevenlabs.io',
+                icon: '🗣️',
+                tags: ['TTS', 'Voice'],
+            },
+            {
+                id: 'suno',
+                name: 'Suno / Udio',
+                categories: ['Audio'],
+                tagline: 'Radio w Twoich rękach.',
+                description: 'Generuj pełne piosenki z wokalem i muzyką w dowolnym stylu. Jakość radiowa.',
+                features: ['Własny tekst', 'Instrumental mode', 'Extend song'],
+                bestFor: ['Jingle', 'Zabawa', 'Podkłady'],
+                hiddenGem: 'Możesz kontynuować piosenkę od dowolnego momentu.',
+                pricing: 'Freemium',
+                rating: 9.5,
+                ctaLink: 'https://suno.com',
+                icon: '🎵',
+                tags: ['Music', 'Fun'],
+            }
+        ];
+
+        const CATEGORIES = ['Wszystkie', 'Wideo', 'Grafika', 'Dev', 'Produktywność', 'Biznes', 'Audio'];
+
+        const SCENARIOS = [
+            {
+                title: "Prezentacja Biznesowa",
+                time: "30 min",
+                difficulty: "Łatwy",
+                tools: ["ChatGPT", "Gamma", "Midjourney"],
+                icon: "📊",
+                desc: "Od pomysłu do gotowych slajdów."
+            },
+            {
+                title: "Video na Social Media",
+                time: "1h",
+                difficulty: "Średni",
+                tools: ["Vidnoz", "CapCut", "ElevenLabs"],
+                icon: "📱",
+                desc: "Awatary, głos i dynamiczny montaż."
+            },
+            {
+                title: "MVP Aplikacji",
+                time: "4h",
+                difficulty: "Trudny",
+                tools: ["Bolt.new", "Cursor", "Supabase"],
+                icon: "🚀",
+                desc: "Prototyp działający w przeglądarce."
+            },
+            {
+                title: "Podcast z Notatek",
+                time: "15 min",
+                difficulty: "Łatwy",
+                tools: ["NotebookLM", "Adobe Podcast"],
+                icon: "🎙️",
+                desc: "Wgraj PDF, otrzymaj gotowy podcast."
+            }
+        ];
+
+        const POWER_COMBOS = [
+            {
+                name: "Ultimate Content Machine",
+                tools: ["ChatGPT", "Midjourney", "Runway"],
+                result: "Nieskończony content wideo wysokiej jakości.",
+                color: "from-pink-500 to-rose-500"
+            },
+            {
+                name: "Academic Researcher",
+                tools: ["Perplexity", "NotebookLM", "Claude"],
+                result: "Analiza setek dokumentów w minuty.",
+                color: "from-blue-500 to-cyan-500"
+            },
+            {
+                name: "Startup Launchpad",
+                tools: ["Ideogram", "Framer", "Cursor"],
+                result: "Logo, Strona i Appka w jeden weekend.",
+                color: "from-emerald-500 to-teal-500"
+            },
+            {
+                name: "Global Speaker",
+                tools: ["HeyGen", "ElevenLabs", "Captions"],
+                result: "Twój film przetłumaczony na 30 języków.",
+                color: "from-orange-500 to-amber-500"
+            },
+             {
+                name: "SaaS Builder",
+                tools: ["v0.dev", "Bolt.new", "Supabase"],
+                result: "Gotowy dashboard z backendem.",
+                color: "from-slate-700 to-slate-500"
+            }
+        ];
+
+        // --- INTELLIGENT MATCHMAKER ENGINE ---
+        
+        const AI_LOGIC = {
+            keywords: {
+                presentation: ['prezentacja', 'slajdy', 'powerpoint', 'pitch', 'wystąpienie', 'szkolenie', 'wykład', 'pptx', 'slide', 'deck', 'raport', 'podsumowanie'],
+                video: ['wideo', 'film', 'youtube', 'tiktok', 'reels', 'montaż', 'nagranie', 'klip', 'animacja', 'ruch', 'movie', 'vlog', 'teledysk', 'short', 'rolka'],
+                graphic: ['grafika', 'logo', 'obraz', 'zdjęcie', 'design', 'baner', 'plakat', 'fotografia', 'art', 'rysunek', 'szkic', 'tło', 'ikona', 'ulotka', 'wizytówka', 'post'],
+                dev: ['kod', 'programowanie', 'strona', 'aplikacja', 'app', 'www', 'sklep', 'landing', 'css', 'html', 'react', 'javascript', 'python', 'baza', 'skrypt', 'bug', 'test'],
+                audio: ['dźwięk', 'głos', 'muzyka', 'lektor', 'piosenka', 'podcast', 'audiobook', 'czytanie', 'mowa', 'tts', 'dubbing', 'wokal', 'nagranie'],
+                research: ['szukanie', 'wiedza', 'nauka', 'analiza', 'dane', 'raport', 'studia', 'uczenie', 'książka', 'artykuł', 'dokument', 'pdf', 'excel', 'tabela', 'porównanie', 'info', 'pytanie']
+            },
+            plans: {
+                presentation: {
+                    title: "Mistrzowska Prezentacja",
+                    fastTrack: {
+                        steps: [
+                            { toolId: 'gamma', reason: 'Wygeneruj strukturę i slajdy z tekstu w 2 minuty.' },
+                            { toolId: 'ideogram', reason: 'Dodaj unikalne grafiki lub napisy.' }
+                        ]
+                    },
+                    proTrack: {
+                        steps: [
+                            { toolId: 'notebooklm', reason: 'Przygotuj merytorykę na podstawie dokumentów.' },
+                            { toolId: 'midjourney', reason: 'Stwórz fotorealistyczne tła i assety.' },
+                            { toolId: 'gamma', reason: 'Złóż wszystko w interaktywną całość.' }
+                        ]
+                    }
+                },
+                video: {
+                    title: "Produkcja Wideo",
+                    fastTrack: {
+                        steps: [
+                            { toolId: 'vidnoz', reason: 'Użyj gotowych szablonów i awatara.' },
+                            { toolId: 'hailuo', reason: 'Dogeneruj brakujące przebitki (B-roll).' }
+                        ]
+                    },
+                    proTrack: {
+                        steps: [
+                            { toolId: 'kling', reason: 'Wygeneruj realistyczne sceny z fizyką.' },
+                            { toolId: 'runway', reason: 'Użyj Motion Brush do ożywienia zdjęć.' },
+                            { toolId: 'heygen', reason: 'Dodaj profesjonalnego lektora i lip-sync.' }
+                        ]
+                    }
+                },
+                graphic: {
+                    title: "Studio Graficzne",
+                    fastTrack: {
+                        steps: [
+                            { toolId: 'ideogram', reason: 'Stwórz gotowy plakat/logo z tekstem.' }
+                        ]
+                    },
+                    proTrack: {
+                        steps: [
+                            { toolId: 'midjourney', reason: 'Wygeneruj bazę artystyczną.' },
+                            { toolId: 'krea', reason: 'Zwiększ rozdzielczość i popraw detale.' },
+                            { toolId: 'photoroom', reason: 'Usuń tło i zrób mockup.' }
+                        ]
+                    }
+                },
+                dev: {
+                    title: "Software House",
+                    fastTrack: {
+                        steps: [
+                            { toolId: 'bolt', reason: 'Postaw całą aplikację jednym promptem.' } 
+                        ]
+                    },
+                    proTrack: {
+                        steps: [
+                            { toolId: 'manus', reason: 'Zleć napisanie szkieletu i testów.' },
+                            { toolId: 'cursor', reason: 'Dopracuj kod i dodaj funkcjonalności.' },
+                            { toolId: 'tiiny', reason: 'Opublikuj demo dla klienta.' }
+                        ]
+                    }
+                },
+                research: {
+                    title: "Deep Research",
+                    fastTrack: {
+                        steps: [
+                            { toolId: 'genspark', reason: 'Szybki przegląd tematu (Sparkpage).' }
+                        ]
+                    },
+                    proTrack: {
+                        steps: [
+                            { toolId: 'perplexity', reason: 'Głęboki fact-checking i raport.' },
+                            { toolId: 'notebooklm', reason: 'Analiza dokumentów źródłowych + Podcast.' }
+                        ]
+                    }
+                },
+                audio: {
+                    title: "Studio Dźwiękowe",
+                    fastTrack: {
+                        steps: [
+                            { toolId: 'elevenlabs', reason: 'Wygeneruj profesjonalnego lektora.' }
+                        ]
+                    },
+                    proTrack: {
+                        steps: [
+                            { toolId: 'suno', reason: 'Stwórz podkład muzyczny.' },
+                            { toolId: 'elevenlabs', reason: 'Dodaj głos i efekty dźwiękowe.' }
+                        ]
+                    }
+                }
+            }
+        };
+
+        const findSolution = (query) => {
+            const q = query.toLowerCase();
+            let bestMatch = null;
+            let maxScore = 0;
+
+            // 1. Check Keywords
+            for (const [key, words] of Object.entries(AI_LOGIC.keywords)) {
+                let score = 0;
+                words.forEach(word => {
+                    if (q.includes(word)) score += 2; // Exact word match is strong
+                });
+                
+                // Fuzzy check (if part of query is in keywords)
+                const queryWords = q.split(' ');
+                queryWords.forEach(qw => {
+                    if (words.some(w => w.includes(qw) && qw.length > 3)) {
+                        score += 1; // Partial match
+                    }
+                });
+
+                if (score > maxScore) {
+                    maxScore = score;
+                    bestMatch = key;
+                }
+            }
+            
+            // 2. Fallback logic if score is low but query implies a general category
+            if (maxScore === 0) {
+                 if (q.includes('napisać') || q.includes('tekst')) return AI_LOGIC.plans['productivity']; 
+                 // Add more catch-alls if needed
+            }
+
+            if (bestMatch && AI_LOGIC.plans[bestMatch]) {
+                return AI_LOGIC.plans[bestMatch];
+            }
+            return null;
+        };
+
+
+        // --- COMPONENTS ---
+
+        const ToolCard = ({ tool, onClick, isFavorite, toggleFavorite }) => {
+            return (
+                <div 
+                    onClick={() => onClick(tool)}
+                    className="group glass-card relative h-full flex flex-col justify-between p-6 rounded-2xl hover:border-accent-500/50 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_-10px_rgba(99,102,241,0.2)] overflow-hidden"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="w-12 h-12 flex items-center justify-center bg-slate-800/80 backdrop-blur-md rounded-xl text-2xl shadow-inner border border-white/5">
+                                {tool.icon}
+                            </div>
+                            <div className="flex gap-2">
+                                {tool.isNew && (
+                                    <span className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 rounded-full border border-emerald-400/20">New</span>
+                                )}
+                                {tool.isHot && (
+                                    <span className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-orange-400 bg-orange-400/10 rounded-full border border-orange-400/20">Hot</span>
+                                )}
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); toggleFavorite(tool.id); }}
+                                    className={`p-1.5 rounded-full transition-colors ${isFavorite ? 'text-pink-500 bg-pink-500/10' : 'text-slate-500 hover:text-pink-400 hover:bg-pink-500/10'}`}
+                                >
+                                    <Icon name="Heart" size={16} className={isFavorite ? "fill-current" : ""} />
+                                </button>
+                            </div>
+                        </div>
+
+                        <h3 className="text-xl font-display font-bold text-white mb-1 group-hover:text-accent-500 transition-colors">
+                            {tool.name}
+                        </h3>
+                        
+                        <p className="text-slate-400 text-sm leading-relaxed line-clamp-2 mb-4">
+                            {tool.tagline}
+                        </p>
+                    </div>
+
+                    <div className="relative z-10 flex items-center justify-between mt-auto pt-4 border-t border-white/5">
+                        <div className="flex gap-2 flex-wrap">
+                            {tool.tags.slice(0, 2).map(tag => (
+                                <span key={tag} className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 bg-slate-800/50 px-2 py-1 rounded">#{tag}</span>
+                            ))}
+                        </div>
+                        <div className="flex items-center text-yellow-400 text-xs font-bold">
+                            <Icon name="Star" size={12} className="mr-1 fill-current" /> {tool.rating}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ToolModal = ({ tool, isOpen, onClose, getToolById }) => {
+            if (!isOpen || !tool) return null;
+
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fade-in">
+                    <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={onClose}></div>
+                    
+                    <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scroll bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden">
+                        
+                        {/* Sidebar / Visual */}
+                        <div className="w-full md:w-1/3 bg-slate-950 p-8 flex flex-col items-center justify-center text-center border-r border-slate-800 relative">
+                             <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent"></div>
+                             <div className="w-24 h-24 bg-slate-800 rounded-2xl flex items-center justify-center text-5xl mb-6 shadow-xl relative z-10 border border-white/10">
+                                {tool.icon}
+                             </div>
+                             <h2 className="text-2xl font-bold text-white mb-2 relative z-10">{tool.name}</h2>
+                             <span className="px-3 py-1 bg-accent-600/20 text-accent-400 rounded-full text-xs font-bold uppercase tracking-widest border border-accent-600/30 mb-6">
+                                {tool.pricing}
+                             </span>
+                             
+                             <div className="w-full space-y-3">
+                                <a href={tool.ctaLink} target="_blank" className="flex items-center justify-center w-full py-3 bg-accent-600 hover:bg-accent-500 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-accent-500/30">
+                                    Otwórz Stronę <Icon name="ExternalLink" size={16} className="ml-2"/>
+                                </a>
+                                <div className="grid grid-cols-2 gap-2 text-center">
+                                     <div className="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                                        <div className="text-yellow-400 font-bold text-lg flex justify-center items-center"><Icon name="Star" size={16} className="mr-1 fill-current"/>{tool.rating}</div>
+                                        <div className="text-[10px] text-slate-500 uppercase">Ocena</div>
+                                     </div>
+                                     <div className="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                                        <div className="text-emerald-400 font-bold text-lg">{tool.categories[0]}</div>
+                                        <div className="text-[10px] text-slate-500 uppercase">Kategoria</div>
+                                     </div>
+                                </div>
+                             </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="w-full md:w-2/3 p-8 bg-slate-900/50">
+                            <button onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white transition-colors">
+                                <Icon name="X" size={20} />
+                            </button>
+
+                            <div className="space-y-8">
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center">
+                                        <Icon name="Brain" size={16} className="mr-2 text-accent-500"/> O narzędziu
+                                    </h3>
+                                    <p className="text-slate-300 leading-relaxed text-lg">
+                                        {tool.description}
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="bg-slate-950/50 p-5 rounded-2xl border border-slate-800">
+                                        <h4 className="text-accent-400 font-bold mb-3 flex items-center">
+                                            <Icon name="Zap" size={16} className="mr-2"/> Kluczowe Funkcje
+                                        </h4>
+                                        <ul className="space-y-2">
+                                            {tool.features && tool.features.map((feature, i) => (
+                                                <li key={i} className="text-slate-400 text-sm flex items-start">
+                                                    <span className="mr-2 text-accent-500">•</span> {feature}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    <div className="bg-slate-950/50 p-5 rounded-2xl border border-slate-800">
+                                        <h4 className="text-emerald-400 font-bold mb-3 flex items-center">
+                                            <Icon name="Sparkles" size={16} className="mr-2"/> Ukryty Gem
+                                        </h4>
+                                        <p className="text-slate-400 text-sm italic">
+                                            "{tool.hiddenGem}"
+                                        </p>
+                                        <div className="mt-4 pt-4 border-t border-slate-800">
+                                            <h5 className="text-slate-500 text-xs font-bold uppercase mb-2">Najlepsze do:</h5>
+                                            <div className="flex flex-wrap gap-2">
+                                                {tool.bestFor && tool.bestFor.map(item => (
+                                                    <span key={item} className="px-2 py-1 bg-slate-800 text-slate-300 text-xs rounded border border-slate-700">{item}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        };
+
+        const MatchmakerWizard = ({ isOpen, onClose }) => {
+            const [input, setInput] = useState('');
+            const [thinking, setThinking] = useState(false);
+            const [result, setResult] = useState(null);
+
+            const handleSearch = () => {
+                if (!input.trim()) return;
+                setThinking(true);
+                setResult(null);
+
+                // Simulate AI Thinking
+                setTimeout(() => {
+                    const solution = findSolution(input);
+                    setResult(solution || "not_found");
+                    setThinking(false);
+                }, 1000); // Faster response
+            };
+
+            const getToolName = (id) => {
+                const t = TOOLS_DATA.find(t => t.id === id);
+                return t ? t.name : id;
+            };
+
+            if (!isOpen) return null;
+
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fade-in">
+                    <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={onClose}></div>
+                    
+                    <div className="relative w-full max-w-3xl bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl p-8 overflow-hidden min-h-[500px] flex flex-col">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+                        <button onClick={onClose} className="absolute top-6 right-6 text-slate-500 hover:text-white"><Icon name="X" size={24}/></button>
+
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-indigo-500/20">
+                                <Icon name="Sparkles" size={32} className="text-white"/>
+                            </div>
+                            <h2 className="text-3xl font-display font-bold text-white mb-2">AI Matchmaker</h2>
+                            <p className="text-slate-400">Opisz, co chcesz stworzyć, a ja zbuduję dla Ciebie plan działania.</p>
+                        </div>
+
+                        {!result && !thinking && (
+                            <div className="flex-1 flex flex-col justify-center max-w-xl mx-auto w-full">
+                                <div className="relative">
+                                    <input 
+                                        type="text" 
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                        placeholder="Np. Chcę stworzyć prezentację biznesową..."
+                                        className="w-full bg-slate-950 border border-slate-700 rounded-xl py-4 pl-6 pr-14 text-lg text-white placeholder-slate-600 focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 transition-all shadow-inner"
+                                        autoFocus
+                                    />
+                                    <button 
+                                        onClick={handleSearch}
+                                        className="absolute right-2 top-2 bottom-2 aspect-square bg-accent-600 hover:bg-accent-500 text-white rounded-lg flex items-center justify-center transition-colors"
+                                    >
+                                        <Icon name="ArrowRight" size={20}/>
+                                    </button>
+                                </div>
+                                <div className="mt-6 flex flex-wrap justify-center gap-2">
+                                    {["Zrobić wideo na TikTok", "Napisać e-booka", "Stworzyć logo firmy", "Zbudować stronę www"].map(hint => (
+                                        <button key={hint} onClick={() => { setInput(hint); setTimeout(handleSearch, 100); }} className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs rounded-full border border-slate-700 transition-colors">
+                                            {hint}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {thinking && (
+                            <div className="flex-1 flex flex-col items-center justify-center">
+                                <div className="flex gap-2 mb-4">
+                                    <div className="w-3 h-3 bg-accent-500 rounded-full animate-bounce"></div>
+                                    <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                                    <div className="w-3 h-3 bg-pink-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                                </div>
+                                <p className="text-slate-400 animate-pulse">Analizuję najlepsze narzędzia...</p>
+                            </div>
+                        )}
+
+                        {result && result !== "not_found" && (
+                            <div className="flex-1 animate-slide-up overflow-y-auto custom-scroll pr-2">
+                                <div className="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
+                                    <h3 className="text-xl font-bold text-white">Plan: <span className="text-accent-400">{result.title}</span></h3>
+                                    <button onClick={() => setResult(null)} className="text-xs text-slate-500 hover:text-white underline">Zacznij od nowa</button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Fast Track */}
+                                    <div className="bg-emerald-900/10 border border-emerald-500/20 rounded-2xl p-5">
+                                        <div className="flex items-center mb-4">
+                                            <div className="p-2 bg-emerald-500/10 rounded-lg mr-3 text-emerald-400">
+                                                <Icon name="Zap" size={20}/>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-white">Szybka Ścieżka</h4>
+                                                <p className="text-xs text-emerald-400/70">15-30 minut</p>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-4 relative">
+                                            {/* Line connector */}
+                                            <div className="absolute left-3.5 top-2 bottom-2 w-0.5 bg-slate-800 z-0"></div>
+                                            
+                                            {result.fastTrack.steps.map((step, idx) => (
+                                                <div key={idx} className="relative z-10 flex gap-4">
+                                                    <div className="w-8 h-8 rounded-full bg-slate-900 border border-emerald-500/30 flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0">
+                                                        {idx + 1}
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="font-bold text-slate-200">{getToolName(step.toolId)}</h5>
+                                                        <p className="text-sm text-slate-400 mt-1">{step.reason}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Pro Track */}
+                                    <div className="bg-purple-900/10 border border-purple-500/20 rounded-2xl p-5">
+                                        <div className="flex items-center mb-4">
+                                            <div className="p-2 bg-purple-500/10 rounded-lg mr-3 text-purple-400">
+                                                <Icon name="Star" size={20}/>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-white">Profesjonalna Ścieżka</h4>
+                                                <p className="text-xs text-purple-400/70">1-4 godziny</p>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-4 relative">
+                                             <div className="absolute left-3.5 top-2 bottom-2 w-0.5 bg-slate-800 z-0"></div>
+                                            {result.proTrack.steps.map((step, idx) => (
+                                                <div key={idx} className="relative z-10 flex gap-4">
+                                                    <div className="w-8 h-8 rounded-full bg-slate-900 border border-purple-500/30 flex items-center justify-center text-xs font-bold text-purple-400 shrink-0">
+                                                        {idx + 1}
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="font-bold text-slate-200">{getToolName(step.toolId)}</h5>
+                                                        <p className="text-sm text-slate-400 mt-1">{step.reason}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {result === "not_found" && (
+                             <div className="flex-1 flex flex-col items-center justify-center text-center">
+                                <div className="text-4xl mb-4">🤔</div>
+                                <h3 className="text-xl font-bold text-white mb-2">Hmm, trudne pytanie.</h3>
+                                <p className="text-slate-400">Spróbuj użyć prostszych słów kluczowych, np. "wideo", "logo", "kod".</p>
+                                <button onClick={() => setResult(null)} className="mt-6 px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-colors">Spróbuj ponownie</button>
+                             </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [activeCategory, setActiveCategory] = useState('Wszystkie');
+            const [searchQuery, setSearchQuery] = useState('');
+            const [selectedTool, setSelectedTool] = useState(null);
+            const [isMatchmakerOpen, setIsMatchmakerOpen] = useState(false);
+            const [favorites, setFavorites] = useState(() => {
+                const saved = localStorage.getItem('nexus_favs');
+                return saved ? JSON.parse(saved) : [];
+            });
+
+            useEffect(() => {
+                localStorage.setItem('nexus_favs', JSON.stringify(favorites));
+            }, [favorites]);
+
+            const toggleFavorite = (id) => {
+                setFavorites(prev => 
+                    prev.includes(id) ? prev.filter(fid => fid !== id) : [...prev, id]
+                );
+            };
+
+            const filteredTools = useMemo(() => {
+                return TOOLS_DATA.filter((tool) => {
+                    // Filter by Category
+                    let matchesCategory = true;
+                    if (activeCategory === 'Ulubione') {
+                        matchesCategory = favorites.includes(tool.id);
+                    } else if (activeCategory !== 'Wszystkie') {
+                        matchesCategory = tool.categories.includes(activeCategory);
+                    }
+
+                    // Filter by Search (Name, Tagline, Tags, Features)
+                    const q = searchQuery.toLowerCase();
+                    const matchesSearch = 
+                        tool.name.toLowerCase().includes(q) || 
+                        tool.tagline.toLowerCase().includes(q) ||
+                        tool.tags.some(tag => tag.toLowerCase().includes(q)) ||
+                        (tool.features && tool.features.some(f => f.toLowerCase().includes(q)));
+
+                    return matchesCategory && matchesSearch;
+                });
+            }, [activeCategory, searchQuery, favorites]);
+
+            return (
+                <div className="min-h-screen pb-20">
+                    
+                    {/* Navbar */}
+                    <nav className="fixed top-0 w-full z-40 glass-panel border-b border-white/5">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex items-center justify-between h-16">
+                                <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
+                                    <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20">
+                                        N
+                                    </div>
+                                    <span className="text-xl font-display font-bold text-white tracking-tight">Nexus<span className="text-accent-500">.AI</span></span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <button 
+                                        onClick={() => setIsMatchmakerOpen(true)}
+                                        className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full text-xs font-bold text-white hover:opacity-90 transition-opacity shadow-lg shadow-indigo-500/20"
+                                    >
+                                        <Icon name="Sparkles" size={14} /> AI Matchmaker
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* Hero Section */}
+                    <div className="pt-32 pb-12 px-4 text-center max-w-4xl mx-auto relative">
+                        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+                        
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/50 border border-slate-700 text-slate-400 text-xs font-bold uppercase tracking-widest mb-6 animate-fade-in">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Baza wiedzy 2025
+                        </div>
+                        
+                        <h1 className="text-5xl md:text-7xl font-display font-bold text-white mb-6 tracking-tight leading-tight animate-slide-up">
+                            Twoje centrum dowodzenia <br />
+                            <span className="gradient-text">Sztuczną Inteligencją</span>
+                        </h1>
+                        
+                        <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 animate-slide-up" style={{animationDelay: '0.1s'}}>
+                            Wyselekcjonowana lista narzędzi, gotowe scenariusze pracy i inteligentny asystent, który pomoże Ci wybrać odpowiednie rozwiązanie.
+                        </p>
+
+                        <div className="flex flex-col sm:flex-row justify-center gap-4 animate-slide-up" style={{animationDelay: '0.2s'}}>
+                            <button 
+                                onClick={() => setIsMatchmakerOpen(true)}
+                                className="px-8 py-4 bg-white text-slate-900 rounded-xl font-bold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 shadow-xl shadow-white/5"
+                            >
+                                <Icon name="Zap" size={20}/> Znajdź rozwiązanie
+                            </button>
+                            <button 
+                                onClick={() => document.getElementById('directory').scrollIntoView({behavior: 'smooth'})}
+                                className="px-8 py-4 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 transition-colors border border-slate-700"
+                            >
+                                Przeglądaj katalog
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Scenarios Section */}
+                    <div className="max-w-7xl mx-auto px-4 mb-20 animate-fade-in">
+                        <h2 className="text-xl font-bold text-slate-400 mb-6 uppercase tracking-wider text-center md:text-left">Gotowe Scenariusze</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {SCENARIOS.map((scenario, i) => (
+                                <div key={i} className="glass-card p-6 rounded-2xl border border-slate-800 hover:border-slate-600 transition-colors group">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <span className="text-3xl">{scenario.icon}</span>
+                                        <span className="text-xs font-bold px-2 py-1 bg-slate-800 rounded-md text-slate-400">{scenario.time}</span>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-white mb-2 group-hover:text-accent-400 transition-colors">{scenario.title}</h3>
+                                    <p className="text-sm text-slate-400 mb-4">{scenario.desc}</p>
+                                    <div className="flex gap-2 flex-wrap">
+                                        {scenario.tools.map(t => (
+                                            <span key={t} className="text-xs px-2 py-1 bg-slate-900/50 rounded border border-slate-700 text-slate-300">{t}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Filter & Search Bar */}
+                    <div id="directory" className="sticky top-20 z-30 max-w-7xl mx-auto px-4 mb-8">
+                        <div className="glass-panel p-2 rounded-2xl flex flex-col md:flex-row gap-4 justify-between items-center shadow-2xl">
+                            
+                            <div className="flex gap-1 overflow-x-auto w-full md:w-auto no-scrollbar px-1">
+                                <button
+                                     onClick={() => setActiveCategory('Ulubione')}
+                                     className={`flex items-center gap-2 whitespace-nowrap px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${activeCategory === 'Ulubione' ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                    <Icon name="Heart" size={14} className={activeCategory === 'Ulubione' ? "fill-current" : ""}/> Ulubione
+                                </button>
+                                <div className="w-px h-6 bg-slate-700 mx-2 self-center"></div>
+                                {CATEGORIES.map((cat) => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => setActiveCategory(cat)}
+                                        className={`whitespace-nowrap px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                                            activeCategory === cat 
+                                            ? 'bg-slate-700 text-white shadow-lg' 
+                                            : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'
+                                        }`}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="relative w-full md:w-72">
+                                <input 
+                                    type="text" 
+                                    placeholder="Szukaj narzędzi..." 
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-accent-500 transition-all"
+                                />
+                                <span className="absolute left-3 top-3 text-slate-500"><Icon name="Search" size={16}/></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main Grid */}
+                    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[400px]">
+                        {filteredTools.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {filteredTools.map((tool) => (
+                                    <ToolCard 
+                                        key={tool.id} 
+                                        tool={tool} 
+                                        onClick={setSelectedTool}
+                                        isFavorite={favorites.includes(tool.id)}
+                                        toggleFavorite={toggleFavorite}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-20 bg-slate-900/30 rounded-3xl border border-dashed border-slate-800">
+                                <div className="text-5xl mb-4 opacity-50">👻</div>
+                                <h3 className="text-xl font-bold text-white mb-2">Pusto tutaj...</h3>
+                                <p className="text-slate-400">Nie znaleźliśmy narzędzi dla Twoich filtrów.</p>
+                                <button 
+                                    onClick={() => {setActiveCategory('Wszystkie'); setSearchQuery('');}}
+                                    className="mt-6 text-accent-400 hover:text-accent-300 font-bold"
+                                >
+                                    Wyczyść filtry
+                                </button>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Power Combos Section */}
+                    <div className="max-w-7xl mx-auto px-4 mt-24 mb-12">
+                        <div className="flex items-center gap-3 mb-8">
+                            <h2 className="text-2xl font-bold text-white">Power Combos</h2>
+                            <span className="px-2 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold uppercase rounded tracking-wider">Pro Tip</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {POWER_COMBOS.map((combo, i) => (
+                                <div key={i} className="relative p-6 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden group">
+                                    <div className={`absolute top-0 left-0 w-1 h-full bg-gradient-to-b ${combo.color}`}></div>
+                                    <h3 className="text-lg font-bold text-white mb-4">{combo.name}</h3>
+                                    
+                                    <div className="flex items-center gap-2 mb-4 text-sm text-slate-300 flex-wrap">
+                                        {combo.tools.map((t, idx) => (
+                                            <React.Fragment key={t}>
+                                                <span className="font-semibold text-white">{t}</span>
+                                                {idx < combo.tools.length - 1 && <Icon name="ChevronRight" size={14} className="text-slate-600"/>}
+                                            </React.Fragment>
+                                        ))}
+                                    </div>
+                                    
+                                    <p className="text-sm text-slate-400 border-t border-slate-800 pt-3">
+                                        <span className="text-accent-500 font-bold">Wynik:</span> {combo.result}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <footer className="border-t border-slate-800 bg-slate-950 mt-20 py-12">
+                        <div className="max-w-7xl mx-auto px-4 text-center">
+                            <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center mx-auto mb-4 text-slate-500">N</div>
+                            <p className="text-slate-500 text-sm">
+                                Nexus AI Directory © 2025. Built for creators.
+                            </p>
+                        </div>
+                    </footer>
+
+                    {/* Modals */}
+                    <ToolModal 
+                        tool={selectedTool} 
+                        isOpen={!!selectedTool} 
+                        onClose={() => setSelectedTool(null)} 
+                    />
+                    
+                    <MatchmakerWizard 
+                        isOpen={isMatchmakerOpen}
+                        onClose={() => setIsMatchmakerOpen(false)}
+                    />
+
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+    </script>
 </body>
 </html>
